@@ -14,7 +14,7 @@ php artisan route:cache
 
 sudo systemctl reload php8.3-fpm
 
-supervisorctl reread
-supervisorctl update
-supervisorctl restart ebook-notifications-queue
-supervisorctl restart ebook-notifications-listener
+# supervisorctl reread
+# supervisorctl update
+# supervisorctl restart ebook-authentication-queue
+# supervisorctl restart ebook-authentication-listener
