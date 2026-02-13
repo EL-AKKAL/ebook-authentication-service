@@ -67,3 +67,21 @@ it('can login with valid credentials', function () {
             'expires_in',
         ]);
 });
+
+it('fails login with invalid credentials', function () {
+    $user = User::factory()->create([
+        'password' => bcrypt('password123'),
+    ]);
+
+    $response = postJson('/api/login', [
+        'email' => $user->email,
+        'password' => 'wrong-password',
+    ]);
+
+    $response
+        ->assertStatus(401)
+        ->assertJson([
+            'error' => 'Unauthorized'
+        ]);
+});
+
