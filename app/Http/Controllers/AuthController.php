@@ -3,28 +3,37 @@
 namespace App\Http\Controllers;
 
 use App\Events\UserRegistered;
+use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 class AuthController extends Controller
 {
-    public function login()
+    public function login(Request $request)
     {
-        $credentials = request(['email', 'password']);
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
 
         JWTAuth::factory()->setTTL(config('jwt.ttl'));
 
-        if (!$token = JWTAuth::attempt($credentials))
+        if (!$token = JWTAuth::attempt($validated))
             return response()->json(['error' => 'Unauthorized'], 401);
 
         return $this->respondWithToken($token, JWTAuth::user());
     }
 
-    public function register()
+    public function register(Request $request)
     {
-        $data = request()->only(['name', 'email', 'password']);
 
-        $data['password'] = bcrypt($data['password']);
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8'],
+        ]);
 
-        $user = \App\Models\User::create($data);
+        $validated['password'] = bcrypt($validated['password']);
+
+        $user = \App\Models\User::create($validated);
 
         JWTAuth::factory()->setTTL(config('jwt.ttl'));
         $token = JWTAuth::fromUser($user);
