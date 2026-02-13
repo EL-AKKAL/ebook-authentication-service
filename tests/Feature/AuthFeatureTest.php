@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\Fluent\AssertableJson;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -137,4 +139,20 @@ it('can refresh jwt token', function () {
             'token_type',
             'expires_in',
         ]);
+});
+
+it('sends password reset link', function () {
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $response = postJson('/api/forgot-password', [
+        'email' => $user->email,
+    ]);
+
+    $response->assertStatus(200);
+    Notification::assertSentTo(
+        $user,
+        ResetPassword::class
+    );
 });
