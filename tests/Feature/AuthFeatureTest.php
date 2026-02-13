@@ -156,3 +156,9 @@ it('sends password reset link', function () {
         ResetPassword::class
     );
 });
+
+it('validates email on forgot password', function () {
+    postJson('/api/forgot-password', [
+        'email' => 'invalid-email',
+    ])->assertStatus(422);
+});
