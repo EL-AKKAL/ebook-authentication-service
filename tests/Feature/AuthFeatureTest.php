@@ -1,11 +1,11 @@
 <?php
 
+use App\Events\UserRegistered;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Testing\Fluent\AssertableJson;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
@@ -19,15 +19,15 @@ it('returns authentication service status', function () {
     $response
         ->assertStatus(200)
         ->assertJson(
-            fn(AssertableJson $json) =>
-            $json->has('api routes')
-                ->etc()
+            [
+                'message' => 'Ebook Authentication Service is running.'
+            ]
         );
 });
 
 it('can register a new user', function () {
 
-    $email = 'john@example.com';
+    $email = fake()->safeEmail();
 
     $response = postJson('/api/register', [
         'name' => 'John Doe',
@@ -36,18 +36,56 @@ it('can register a new user', function () {
     ]);
 
     $response->assertStatus(200)
-        ->assertJsonStructure([
-            'access_token',
-            'token_type',
-            'expires_in',
-            'name',
-            'email',
-            'id',
+        ->assertJson([
+            'token_type' => 'bearer',
         ]);
+
+    Event::assertDispatched(UserRegistered::class);
 
     expect(User::where('email', $email)
         ->exists())
         ->toBeTrue();
+});
+
+it('fails registration with invalid credentials', function () {
+
+    $response = postJson('/api/register', [
+        'name' => 'John Doe',
+        'email' => 'invalid-email',
+        'password' => 'password123',
+    ]);
+
+    $response
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['email']);
+
+    $response = postJson('/api/register', [
+        'name' => 'John Doe',
+        'email' => 'john@example.com',
+    ]);
+
+    $response
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['password']);
+});
+
+it('fails registration if email already exists', function () {
+
+    $email = fake()->safeEmail();
+
+    User::factory()->create([
+        'email' => $email,
+    ]);
+
+    $response = postJson('/api/register', [
+        'name' => 'John Doe',
+        'email' => $email,
+        'password' => 'password123',
+    ]);
+
+    $response
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['email']);
 });
 
 it('can login with valid credentials', function () {
@@ -65,10 +103,8 @@ it('can login with valid credentials', function () {
 
     $response
         ->assertStatus(200)
-        ->assertJsonStructure([
-            'access_token',
-            'token_type',
-            'expires_in',
+        ->assertJson([
+            'token_type' => 'bearer',
         ]);
 });
 
@@ -90,11 +126,9 @@ it('fails login with invalid credentials', function () {
 });
 
 it('returns authenticated user data', function () {
-    $user = User::factory()->create();
+    [$user, $token] = actingAsUser();
 
-    $token = JWTAuth::fromUser($user);
-
-    $response = withHeader('Authorization', "Bearer $token")
+    $response = withHeader('Authorization', $token)
         ->getJson('/api/me');
 
     $response
@@ -112,10 +146,10 @@ it('blocks /me without token', function () {
 
 
 it('can logout authenticated user', function () {
-    $user = User::factory()->create();
-    $token = JWTAuth::fromUser($user);
 
-    $response = withHeader('Authorization', "Bearer $token")
+    [$user, $token] = actingAsUser();
+
+    $response = withHeader('Authorization', $token)
         ->postJson('/api/logout');
 
     $response
@@ -126,18 +160,15 @@ it('can logout authenticated user', function () {
 });
 
 it('can refresh jwt token', function () {
-    $user = User::factory()->create();
-    $token = JWTAuth::fromUser($user);
+    [$user, $token] = actingAsUser();
 
-    $response = withHeader('Authorization', "Bearer $token")
+    $response = withHeader('Authorization', $token)
         ->postJson('/api/refresh');
 
     $response
         ->assertStatus(200)
-        ->assertJsonStructure([
-            'access_token',
-            'token_type',
-            'expires_in',
+        ->assertJson([
+            'token_type' => 'bearer',
         ]);
 });
 
