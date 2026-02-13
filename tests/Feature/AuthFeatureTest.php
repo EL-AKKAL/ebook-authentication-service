@@ -3,9 +3,11 @@
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\Fluent\AssertableJson;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
+use function Pest\Laravel\withHeader;
 
 uses(RefreshDatabase::class);
 
@@ -85,3 +87,18 @@ it('fails login with invalid credentials', function () {
         ]);
 });
 
+it('returns authenticated user data', function () {
+    $user = User::factory()->create();
+
+    $token = JWTAuth::fromUser($user);
+
+    $response = withHeader('Authorization', "Bearer $token")
+        ->getJson('/api/me');
+
+    $response
+        ->assertStatus(200)
+        ->assertJson([
+            'id' => $user->id,
+            'email' => $user->email,
+        ]);
+});
