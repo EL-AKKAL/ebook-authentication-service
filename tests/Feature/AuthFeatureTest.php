@@ -102,3 +102,69 @@ it('returns authenticated user data', function () {
             'email' => $user->email,
         ]);
 });
+
+it('blocks /me without token', function () {
+    getJson('/api/me')
+        ->assertStatus(401);
+});
+
+
+// //
+// // LOGOUT
+// //
+
+// it('can logout authenticated user', function () {
+//     $user = User::factory()->create();
+//     $token = JWTAuth::fromUser($user);
+
+//     $response = $this->withHeader('Authorization', "Bearer $token")
+//         ->postJson('/api/logout');
+
+//     $response
+//         ->assertStatus(200)
+//         ->assertJson([
+//             'message' => 'Successfully logged out'
+//         ]);
+// });
+
+// //
+// // REFRESH
+// //
+
+// it('can refresh jwt token', function () {
+//     $user = User::factory()->create();
+//     $token = JWTAuth::fromUser($user);
+
+//     $response = $this->withHeader('Authorization', "Bearer $token")
+//         ->postJson('/api/refresh');
+
+//     $response
+//         ->assertStatus(200)
+//         ->assertJsonStructure([
+//             'access_token',
+//             'token_type',
+//             'expires_in',
+//         ]);
+// });
+
+// //
+// // FORGOT PASSWORD
+// //
+
+// it('sends password reset link', function () {
+//     Password::fake();
+
+//     $user = User::factory()->create();
+
+//     $response = $this->postJson('/api/forgot-password', [
+//         'email' => $user->email,
+//     ]);
+
+//     $response->assertStatus(200);
+// });
+
+// it('validates email on forgot password', function () {
+//     $this->postJson('/api/forgot-password', [
+//         'email' => 'invalid-email',
+//     ])->assertStatus(422);
+// });
