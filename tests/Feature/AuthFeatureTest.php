@@ -122,3 +122,19 @@ it('can logout authenticated user', function () {
             'message' => 'Successfully logged out'
         ]);
 });
+
+it('can refresh jwt token', function () {
+    $user = User::factory()->create();
+    $token = JWTAuth::fromUser($user);
+
+    $response = withHeader('Authorization', "Bearer $token")
+        ->postJson('/api/refresh');
+
+    $response
+        ->assertStatus(200)
+        ->assertJsonStructure([
+            'access_token',
+            'token_type',
+            'expires_in',
+        ]);
+});
