@@ -15,9 +15,6 @@ Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('forgot-password', PasswordResetLinkController::class)
     ->name('password.request');
 
-Route::get('reset-password/{token}', function () { })
-    ->name('password.reset');
-
 Route::middleware('auth:api')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])
