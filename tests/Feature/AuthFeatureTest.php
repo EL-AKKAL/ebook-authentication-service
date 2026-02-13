@@ -22,14 +22,16 @@ it('returns authentication service status', function () {
 });
 
 it('can register a new user', function () {
+
+    $email = 'john@example.com';
+
     $response = postJson('/api/register', [
         'name' => 'John Doe',
-        'email' => 'john@example.com',
+        'email' => $email,
         'password' => 'password123',
     ]);
 
-    $response
-        ->assertStatus(200)
+    $response->assertStatus(200)
         ->assertJsonStructure([
             'access_token',
             'token_type',
@@ -39,5 +41,7 @@ it('can register a new user', function () {
             'id',
         ]);
 
-    expect(User::where('email', 'john@example.com')->exists())->toBeTrue();
+    expect(User::where('email', $email)
+        ->exists())
+        ->toBeTrue();
 });
