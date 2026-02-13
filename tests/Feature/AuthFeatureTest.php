@@ -45,3 +45,25 @@ it('can register a new user', function () {
         ->exists())
         ->toBeTrue();
 });
+
+it('can login with valid credentials', function () {
+
+    $password = 'password123';
+
+    $user = User::factory()->create([
+        'password' => bcrypt($password),
+    ]);
+
+    $response = postJson('/api/login', [
+        'email' => $user->email,
+        'password' => $password,
+    ]);
+
+    $response
+        ->assertStatus(200)
+        ->assertJsonStructure([
+            'access_token',
+            'token_type',
+            'expires_in',
+        ]);
+});
