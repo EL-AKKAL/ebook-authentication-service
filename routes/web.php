@@ -9,9 +9,10 @@ Route::get('/', function () {
             '/login' => 'POST : login to your account',
             '/register' => 'POST : create a new account',
             '/forgot-password' => 'POST : ask for reset password',
-            '//logout' => 'POST : kill session',
+            '/reset-password'=> 'POST : submit changed password',
+            '/logout' => 'POST : kill session',
             '/me' => 'GET : get current auth user',
         ],
-        'pipeline' => 'CI/CD pipeline is set up for automated deployments.',
+        'pipeline' => 'CI/CD pipeline is set up for automated tests and deployments.',
     ]);
 });
