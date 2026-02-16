@@ -13,8 +13,3 @@ php artisan config:cache
 php artisan route:cache
 
 sudo systemctl reload php8.3-fpm
-
-# supervisorctl reread
-# supervisorctl update
-# supervisorctl restart ebook-authentication-queue
-# supervisorctl restart ebook-authentication-listener
