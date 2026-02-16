@@ -2,7 +2,7 @@
 
 use App\Events\UserRegistered;
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
@@ -182,10 +182,10 @@ it('sends password reset link', function () {
     ]);
 
     $response->assertStatus(200);
-    Notification::assertSentTo(
-        $user,
-        ResetPassword::class
-    );
+Notification::assertSentTo(
+    $user,
+    ResetPasswordNotification::class
+);
 });
 
 it('validates email on forgot password', function () {
