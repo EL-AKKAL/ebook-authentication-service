@@ -239,3 +239,20 @@ it('fails reset with invalid token', function () {
         ->assertStatus(422)
         ->assertJsonStructure(['email']);
 });
+
+it('fails if password confirmation does not match', function () {
+    $user = User::factory()->create();
+
+    $token = Password::createToken($user);
+
+    $response = postJson('/api/reset-password', [
+        'email' => $user->email,
+        'token' => $token,
+        'password' => 'new-password123',
+        'password_confirmation' => 'wrong-confirmation',
+    ]);
+
+    $response
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['password']);
+});
