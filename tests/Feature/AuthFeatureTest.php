@@ -3,9 +3,12 @@
 use App\Events\UserRegistered;
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
@@ -182,14 +185,57 @@ it('sends password reset link', function () {
     ]);
 
     $response->assertStatus(200);
-Notification::assertSentTo(
-    $user,
-    ResetPasswordNotification::class
-);
+    Notification::assertSentTo(
+        $user,
+        ResetPasswordNotification::class
+    );
 });
 
 it('validates email on forgot password', function () {
     postJson('/api/forgot-password', [
         'email' => 'invalid-email',
     ])->assertStatus(422);
+});
+
+it('can reset password with valid token', function () {
+    Event::fake();
+
+    $password = 'password';
+
+    $user = User::factory()->create([
+        'password' => bcrypt('old-password'),
+    ]);
+
+    $token = Password::createToken($user);
+
+    $response = postJson('/api/reset-password', [
+        'email' => $user->email,
+        'token' => $token,
+        'password' => $password,
+        'password_confirmation' => $password,
+    ]);
+
+    $response
+        ->assertStatus(200)
+        ->assertJsonStructure(['status']);
+
+    expect(Hash::check($password, $user->fresh()->password))
+        ->toBeTrue();
+
+    Event::assertDispatched(PasswordReset::class);
+});
+
+it('fails reset with invalid token', function () {
+    $user = User::factory()->create();
+
+    $response = postJson('/api/reset-password', [
+        'email' => $user->email,
+        'token' => 'invalid-token',
+        'password' => 'new-password123',
+        'password_confirmation' => 'new-password123',
+    ]);
+
+    $response
+        ->assertStatus(422)
+        ->assertJsonStructure(['email']);
 });
